@@ -78,31 +78,31 @@ def criar_casino(nome, localizacao, taxa, moeda, capacidade_maxima):
     try:
         rv = validar_nome(nome)
         if not rv["valido"]:
-            log.warning("Validacao falhou (nome): %s", rv["mensagem"])
+            log.error("Validacao falhou (nome): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         nome_ok = rv["valor"]
 
         rv = validar_localizacao(localizacao)
         if not rv["valido"]:
-            log.warning("Validacao falhou (localizacao): %s", rv["mensagem"])
+            log.error("Validacao falhou (localizacao): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         loc_ok = rv["valor"]
 
         rv = validar_taxa(taxa)
         if not rv["valido"]:
-            log.warning("Validacao falhou (taxa): %s", rv["mensagem"])
+            log.error("Validacao falhou (taxa): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         taxa_ok = rv["valor"]
 
         rv = validar_moeda(moeda)
         if not rv["valido"]:
-            log.warning("Validacao falhou (moeda): %s", rv["mensagem"])
+            log.error("Validacao falhou (moeda): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         moeda_ok = rv["valor"]
 
         rv = validar_capacidade(capacidade_maxima)
         if not rv["valido"]:
-            log.warning("Validacao falhou (capacidade_maxima): %s", rv["mensagem"])
+            log.error("Validacao falhou (capacidade_maxima): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         cap_ok = rv["valor"]
 
@@ -138,7 +138,7 @@ def ler_casino_por_id(id_casino):
     carregar_casinos()
     c = base_casinos.get(str(id_casino).strip().upper())
     if not c:
-        log.warning("Casino nao encontrado: id='%s'.", id_casino)
+        log.error("Casino nao encontrado: id='%s'.", id_casino)
         return 404, "Casino nao encontrado."
     log.debug("Casino lido: id='%s'.", id_casino)
     return 200, c
@@ -149,7 +149,7 @@ def ler_casino_por_nome(nome):
         if c["nome"].lower() == str(nome).strip().lower():
             log.debug("Casino lido por nome: '%s'.", nome)
             return 200, c
-    log.warning("Casino nao encontrado por nome: '%s'.", nome)
+    log.error("Casino nao encontrado por nome: '%s'.", nome)
     return 404, f"Casino '{nome}' nao encontrado."
 
 def listar_todos_casinos():
@@ -176,7 +176,7 @@ def atualizar_casino(id_casino, campo, valor):
     carregar_casinos()
     c = base_casinos.get(str(id_casino).strip().upper())
     if not c:
-        log.warning("Casino nao encontrado para atualizar: id='%s'.", id_casino)
+        log.error("Casino nao encontrado para atualizar: id='%s'.", id_casino)
         return 404, "Casino nao encontrado."
 
     campo = campo.lower().strip()
@@ -187,7 +187,7 @@ def atualizar_casino(id_casino, campo, valor):
     if campo in VALIDACOES_CASINO:
         rv = VALIDACOES_CASINO[campo](valor)
         if not rv["valido"]:
-            log.warning("Validacao falhou ao atualizar casino (%s): %s", campo, rv["mensagem"])
+            log.error("Validacao falhou ao atualizar casino (%s): %s", campo, rv["mensagem"])
             return 422, rv["mensagem"]
         c[campo] = rv["valor"]
         guardar_casinos()
@@ -206,7 +206,7 @@ def remover_casino(id_casino):
     carregar_casinos()
     id_upper = str(id_casino).strip().upper()
     if id_upper not in base_casinos:
-        log.warning("Casino nao encontrado para remover: id='%s'.", id_casino)
+        log.error("Casino nao encontrado para remover: id='%s'.", id_casino)
         return 404, f"Casino '{id_casino}' nao encontrado."
     c = base_casinos.pop(id_upper)
     guardar_casinos()
