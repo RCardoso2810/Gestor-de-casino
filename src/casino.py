@@ -181,7 +181,7 @@ def atualizar_casino(id_casino, campo, valor):
 
     campo = campo.lower().strip()
     if campo not in CAMPOS_EDITAVEIS_CASINO:
-        log.warning("Campo invalido para edicao: '%s'.", campo)
+        log.error("Campo invalido para edicao: '%s'.", campo)
         return 400, f"Campo '{campo}' invalido. Editaveis: {' | '.join(CAMPOS_EDITAVEIS_CASINO)}"
 
     if campo in VALIDACOES_CASINO:
