@@ -87,56 +87,56 @@ def criar_cliente(id_casino, nome, data_nasc, genero, nacionalidade,
     try:
         rv = validar_casino_existe(base_casinos)
         if not rv["valido"]:
-            log.warning("Sem casinos registados ao criar cliente.")
+            log.error("Sem casinos registados ao criar cliente.")
             return 404, rv["mensagem"]
 
         rv = validar_id_casino(id_casino, base_casinos)
         if not rv["valido"]:
-            log.warning("Casino invalido ao criar cliente: '%s'.", id_casino)
+            log.error("Casino invalido ao criar cliente: '%s'.", id_casino)
             return 404, rv["mensagem"]
         id_cas_ok = rv["valor"]
 
         rv = validar_nome(nome)
         if not rv["valido"]:
-            log.warning("Validacao falhou (nome): %s", rv["mensagem"])
+            log.error("Validacao falhou (nome): %s", rv["mensagem"])
             return 422, rv["mensagem"]
 
         rv = validar_data_nascimento(data_nasc)
         if not rv["valido"]:
-            log.warning("Validacao falhou (data_nascimento): %s", rv["mensagem"])
+            log.error("Validacao falhou (data_nascimento): %s", rv["mensagem"])
             return 422, rv["mensagem"]
 
         rv = validar_genero(genero)
         if not rv["valido"]:
-            log.warning("Validacao falhou (genero): %s", rv["mensagem"])
+            log.error("Validacao falhou (genero): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         genero_ok = rv["valor"]
 
         rv = validar_nacionalidade(nacionalidade)
         if not rv["valido"]:
-            log.warning("Validacao falhou (nacionalidade): %s", rv["mensagem"])
+            log.error("Validacao falhou (nacionalidade): %s", rv["mensagem"])
             return 422, rv["mensagem"]
 
         rv = validar_contacto(contacto)
         if not rv["valido"]:
-            log.warning("Validacao falhou (contacto): %s", rv["mensagem"])
+            log.error("Validacao falhou (contacto): %s", rv["mensagem"])
             return 422, rv["mensagem"]
 
         rv = validar_saldo(saldo)
         if not rv["valido"]:
-            log.warning("Validacao falhou (saldo): %s", rv["mensagem"])
+            log.error("Validacao falhou (saldo): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         saldo_ok = rv["valor"]
 
         rv = validar_nivel(nivel)
         if not rv["valido"]:
-            log.warning("Validacao falhou (nivel): %s", rv["mensagem"])
+            log.error("Validacao falhou (nivel): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         nivel_ok = rv["valor"]
 
         rv = validar_estado(estado)
         if not rv["valido"]:
-            log.warning("Validacao falhou (estado): %s", rv["mensagem"])
+            log.error("Validacao falhou (estado): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         estado_ok = rv["valor"]
 
@@ -174,7 +174,7 @@ def ler_cliente_por_id(id_cliente):
     carregar_clientes()
     c = base_clientes.get(str(id_cliente).upper())
     if not c:
-        log.warning("Cliente nao encontrado: id='%s'.", id_cliente)
+        log.error("Cliente nao encontrado: id='%s'.", id_cliente)
         return 404, "Cliente nao encontrado."
     log.debug("Cliente lido: id='%s'.", id_cliente)
     return 200, c
@@ -185,7 +185,7 @@ def ler_cliente_por_nome(nome):
         if c["nome"].lower() == str(nome).strip().lower():
             log.debug("Cliente lido por nome: '%s'.", nome)
             return 200, c
-    log.warning("Cliente nao encontrado por nome: '%s'.", nome)
+    log.error("Cliente nao encontrado por nome: '%s'.", nome)
     return 404, f"Cliente '{nome}' nao encontrado."
 
 def listar_todos_clientes():
@@ -208,18 +208,18 @@ def atualizar_cliente(id_cliente, campo, valor):
     carregar_clientes()
     c = base_clientes.get(str(id_cliente).upper())
     if not c:
-        log.warning("Cliente nao encontrado para atualizar: id='%s'.", id_cliente)
+        log.error("Cliente nao encontrado para atualizar: id='%s'.", id_cliente)
         return 404, "Cliente nao encontrado."
 
     campo = campo.lower().strip()
     if campo not in CAMPOS_EDITAVEIS_CLIENTE:
-        log.warning("Campo invalido para edicao: '%s'.", campo)
+        log.error("Campo invalido para edicao: '%s'.", campo)
         return 400, f"Campo '{campo}' invalido. Editaveis: {' | '.join(CAMPOS_EDITAVEIS_CLIENTE)}"
 
     if campo in VALIDACOES_CLIENTE:
         rv = VALIDACOES_CLIENTE[campo](valor)
         if not rv["valido"]:
-            log.warning("Validacao falhou ao atualizar cliente (%s): %s", campo, rv["mensagem"])
+            log.error("Validacao falhou ao atualizar cliente (%s): %s", campo, rv["mensagem"])
             return 422, rv["mensagem"]
         c[campo] = rv["valor"]
         guardar_clientes()
@@ -238,7 +238,7 @@ def remover_cliente(id_cliente):
     carregar_clientes()
     id_upper = str(id_cliente).upper()
     if id_upper not in base_clientes:
-        log.warning("Cliente nao encontrado para remover: id='%s'.", id_cliente)
+        log.error("Cliente nao encontrado para remover: id='%s'.", id_cliente)
         return 404, f"Cliente '{id_cliente}' nao encontrado."
     c = base_clientes.pop(id_upper)
     guardar_clientes()
