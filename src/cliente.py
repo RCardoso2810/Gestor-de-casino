@@ -7,6 +7,7 @@
 import json
 import os
 from datetime import date
+from logger import get_logger
 from utils import (
     validar_nome,
     validar_data_nascimento,
@@ -21,7 +22,7 @@ from utils import (
     gerar_id_filho,
 )
 from casino import contadores_filhos, carregar_casinos
-from logger import get_logger
+
 
 log = get_logger("cliente")
 

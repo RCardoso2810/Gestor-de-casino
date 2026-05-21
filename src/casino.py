@@ -5,7 +5,8 @@
 # ══════════════════════════════════════════════════════════════
 
 import json
-import os
+import osl
+from logger import get_logger
 from utils import (
     validar_nome,
     validar_localizacao,
@@ -15,7 +16,7 @@ from utils import (
     gerar_id_casino,
     MOEDAS_VALIDAS,
 )
-from logger import get_logger
+
 
 log = get_logger("casino")
 

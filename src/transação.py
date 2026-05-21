@@ -7,6 +7,7 @@
 import json
 import os
 from datetime import datetime
+from logger import get_logger
 from utils import (
     validar_id_cliente,
     validar_tipo_transacao,
@@ -21,7 +22,7 @@ from utils import (
     validar_base_para_guardar,
     validar_ficheiro_para_carregar,
 )
-from logger import get_logger
+
 
 log = get_logger("transacao")
 
