@@ -98,47 +98,47 @@ def criar_jogo(id_casino, nome, custo_minimo, saldo_jogo, retorno,
     try:
         rv = validar_casino_existe(base_casinos)
         if not rv["valido"]:
-            log.warning("Sem casinos registados ao criar jogo.")
+            log.error("Sem casinos registados ao criar jogo.")
             return 404, rv["mensagem"]
 
         rv = validar_id_casino(id_casino, base_casinos)
         if not rv["valido"]:
-            log.warning("Casino invalido ao criar jogo: '%s'.", id_casino)
+            log.error("Casino invalido ao criar jogo: '%s'.", id_casino)
             return 404, rv["mensagem"]
         id_cas_ok = rv["valor"]
 
         rv = validar_nome_jogo(nome)
         if not rv["valido"]:
-            log.warning("Validacao falhou (nome_jogo): %s", rv["mensagem"])
+            log.error("Validacao falhou (nome_jogo): %s", rv["mensagem"])
             return 422, rv["mensagem"]
 
         rv = validar_custo_minimo(custo_minimo)
         if not rv["valido"]:
-            log.warning("Validacao falhou (custo_minimo): %s", rv["mensagem"])
+            log.error("Validacao falhou (custo_minimo): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         custo_ok = rv["valor"]
 
         rv = validar_saldo_jogo(saldo_jogo)
         if not rv["valido"]:
-            log.warning("Validacao falhou (saldo_jogo): %s", rv["mensagem"])
+            log.error("Validacao falhou (saldo_jogo): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         saldo_ok = rv["valor"]
 
         rv = validar_retorno(retorno)
         if not rv["valido"]:
-            log.warning("Validacao falhou (retorno): %s", rv["mensagem"])
+            log.error("Validacao falhou (retorno): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         retorno_ok = rv["valor"]
 
         rv = validar_nivel(nivel_acesso, "Nivel de acesso")
         if not rv["valido"]:
-            log.warning("Validacao falhou (nivel_acesso): %s", rv["mensagem"])
+            log.error("Validacao falhou (nivel_acesso): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         nivel_ok = rv["valor"]
 
         rv = validar_estado(estado)
         if not rv["valido"]:
-            log.warning("Validacao falhou (estado): %s", rv["mensagem"])
+            log.error("Validacao falhou (estado): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         estado_ok = rv["valor"]
 
@@ -154,7 +154,7 @@ def criar_jogo(id_casino, nome, custo_minimo, saldo_jogo, retorno,
         for campo_t, valor_t in entradas_tipos:
             rv = VALIDACOES_TIPOS_JOGO[campo_t](valor_t)
             if not rv["valido"]:
-                log.warning("Validacao falhou (tipo '%s'): %s", campo_t, rv["mensagem"])
+                log.error("Validacao falhou (tipo '%s'): %s", campo_t, rv["mensagem"])
                 return 422, rv["mensagem"]
             tipos[campo_t] = rv["valor"]
 
@@ -191,7 +191,7 @@ def ler_jogo_por_id(id_jogo):
     carregar_jogos()
     j = base_jogos.get(str(id_jogo).upper())
     if not j:
-        log.warning("Jogo nao encontrado: id='%s'.", id_jogo)
+        log.error("Jogo nao encontrado: id='%s'.", id_jogo)
         return 404, "Jogo nao encontrado."
     log.debug("Jogo lido: id='%s'.", id_jogo)
     return 200, j
@@ -202,7 +202,7 @@ def ler_jogo_por_nome(nome):
         if j["nome"].lower() == str(nome).strip().lower():
             log.debug("Jogo lido por nome: '%s'.", nome)
             return 200, j
-    log.warning("Jogo nao encontrado por nome: '%s'.", nome)
+    log.error("Jogo nao encontrado por nome: '%s'.", nome)
     return 404, f"Jogo '{nome}' nao encontrado."
 
 def listar_todos_jogos():
@@ -231,18 +231,18 @@ def atualizar_jogo(id_jogo, campo, valor):
     carregar_jogos()
     j = base_jogos.get(str(id_jogo).upper())
     if not j:
-        log.warning("Jogo nao encontrado para atualizar: id='%s'.", id_jogo)
+        log.error("Jogo nao encontrado para atualizar: id='%s'.", id_jogo)
         return 404, f"Jogo '{id_jogo}' nao encontrado."
 
     campo = campo.lower().strip()
     if campo not in CAMPOS_EDITAVEIS_JOGO:
-        log.warning("Campo invalido para edicao: '%s'.", campo)
+        log.error("Campo invalido para edicao: '%s'.", campo)
         return 400, f"Campo '{campo}' invalido. Editaveis: {' | '.join(CAMPOS_EDITAVEIS_JOGO)}"
 
     if campo in VALIDACOES_JOGO:
         rv = VALIDACOES_JOGO[campo](valor)
         if not rv["valido"]:
-            log.warning("Validacao falhou ao atualizar jogo (%s): %s", campo, rv["mensagem"])
+            log.error("Validacao falhou ao atualizar jogo (%s): %s", campo, rv["mensagem"])
             return 422, rv["mensagem"]
         j[campo] = rv["valor"]
         guardar_jogos()
@@ -252,7 +252,7 @@ def atualizar_jogo(id_jogo, campo, valor):
     if campo in CAMPOS_TIPOS:
         rv = VALIDACOES_TIPOS_JOGO[campo](valor)
         if not rv["valido"]:
-            log.warning("Validacao falhou ao atualizar tipo de jogo (%s): %s", campo, rv["mensagem"])
+            log.error("Validacao falhou ao atualizar tipo de jogo (%s): %s", campo, rv["mensagem"])
             return 422, rv["mensagem"]
         j["tipos"][campo] = rv["valor"]
         guardar_jogos()
@@ -271,7 +271,7 @@ def remover_jogo(id_jogo):
     carregar_jogos()
     id_upper = str(id_jogo).upper()
     if id_upper not in base_jogos:
-        log.warning("Jogo nao encontrado para remover: id='%s'.", id_jogo)
+        log.error("Jogo nao encontrado para remover: id='%s'.", id_jogo)
         return 404, f"Jogo '{id_jogo}' nao encontrado."
     j = base_jogos.pop(id_upper)
     guardar_jogos()
