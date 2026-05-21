@@ -102,37 +102,37 @@ def criar_transacao(id_cliente, tipo, tipo_movimento,
     try:
         rv = validar_id_cliente(id_cliente)
         if not rv["valido"]:
-            log.warning("Validacao falhou (id_cliente): %s", rv["mensagem"])
+            log.error("Validacao falhou (id_cliente): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         id_cli_ok = rv["valor"]
 
         rv = validar_tipo_transacao(tipo)
         if not rv["valido"]:
-            log.warning("Validacao falhou (tipo): %s", rv["mensagem"])
+            log.error("Validacao falhou (tipo): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         tipo_ok = rv["valor"]
 
         rv = validar_tipo_movimento(tipo_movimento)
         if not rv["valido"]:
-            log.warning("Validacao falhou (tipo_movimento): %s", rv["mensagem"])
+            log.error("Validacao falhou (tipo_movimento): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         tipo_mov_ok = rv["valor"]
 
         rv = validar_montante(montante)
         if not rv["valido"]:
-            log.warning("Validacao falhou (montante): %s", rv["mensagem"])
+            log.error("Validacao falhou (montante): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         montante_ok = rv["valor"]
 
         rv = validar_metodo_pagamento(metodo_pagamento)
         if not rv["valido"]:
-            log.warning("Validacao falhou (metodo_pagamento): %s", rv["mensagem"])
+            log.error("Validacao falhou (metodo_pagamento): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         metodo_ok = rv["valor"]
 
         rv = validar_estado_transacao(estado)
         if not rv["valido"]:
-            log.warning("Validacao falhou (estado): %s", rv["mensagem"])
+            log.error("Validacao falhou (estado): %s", rv["mensagem"])
             return 422, rv["mensagem"]
         estado_ok = rv["valor"]
 
@@ -167,7 +167,7 @@ def criar_transacao(id_cliente, tipo, tipo_movimento,
 def ler_transacao_por_id(id_transacao):
     t = base_transacoes.get(str(id_transacao).upper())
     if not t:
-        log.warning("Transacao nao encontrada: id='%s'.", id_transacao)
+        log.error("Transacao nao encontrada: id='%s'.", id_transacao)
         return 404, "Transacao nao encontrada."
     log.debug("Transacao lida: id='%s'.", id_transacao)
     return 200, t
@@ -176,7 +176,7 @@ def listar_transacoes_por_cliente(id_cliente):
     id_cli = str(id_cliente).strip().upper()
     lista = [t for t in base_transacoes.values() if t["id_cliente"] == id_cli]
     if not lista:
-        log.warning("Nenhuma transacao encontrada para cliente: '%s'.", id_cliente)
+        log.error("Nenhuma transacao encontrada para cliente: '%s'.", id_cliente)
         return 404, f"Nenhuma transacao encontrada para o cliente '{id_cliente}'."
     log.debug("Transacoes por cliente '%s': %d registo(s).", id_cliente, len(lista))
     return 200, lista
@@ -198,18 +198,18 @@ def atualizar_transacao(id_transacao, campo, valor):
     log.info("Atualizar transacao: id='%s', campo='%s'.", id_transacao, campo)
     t = base_transacoes.get(str(id_transacao).upper())
     if not t:
-        log.warning("Transacao nao encontrada para atualizar: id='%s'.", id_transacao)
+        log.error("Transacao nao encontrada para atualizar: id='%s'.", id_transacao)
         return 404, "Transacao nao encontrada."
 
     campo = campo.lower().strip()
     if campo not in CAMPOS_EDITAVEIS_TRANSACAO:
-        log.warning("Campo invalido para edicao: '%s'.", campo)
+        log.error("Campo invalido para edicao: '%s'.", campo)
         return 400, f"Campo '{campo}' invalido. Editaveis: {' | '.join(CAMPOS_EDITAVEIS_TRANSACAO)}"
 
     if campo in VALIDACOES_TRANSACAO:
         rv = VALIDACOES_TRANSACAO[campo](valor)
         if not rv["valido"]:
-            log.warning("Validacao falhou ao atualizar transacao (%s): %s", campo, rv["mensagem"])
+            log.error("Validacao falhou ao atualizar transacao (%s): %s", campo, rv["mensagem"])
             return 422, rv["mensagem"]
         t[campo] = rv["valor"]
         log.info("Transacao atualizada: id='%s', campo='%s'.", id_transacao, campo)
@@ -226,7 +226,7 @@ def remover_transacao(id_transacao):
     log.info("Remover transacao: id='%s'.", id_transacao)
     id_upper = str(id_transacao).upper()
     if id_upper not in base_transacoes:
-        log.warning("Transacao nao encontrada para remover: id='%s'.", id_transacao)
+        log.error("Transacao nao encontrada para remover: id='%s'.", id_transacao)
         return 404, f"Transacao '{id_transacao}' nao encontrada."
     t = base_transacoes.pop(id_upper)
     log.info("Transacao removida: id='%s'.", id_upper)
