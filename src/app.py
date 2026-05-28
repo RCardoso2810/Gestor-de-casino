@@ -68,7 +68,7 @@ def _escurecer(hex_cor, fator=0.75):
         max(0, int(r * fator)), max(0, int(g * fator)), max(0, int(b * fator))
     )
 
-#teste
+
 
 def _estilo_entry(e, width=26):
     e.configure(
