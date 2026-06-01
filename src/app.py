@@ -1,8 +1,5 @@
 # ══════════════════════════════════════════════════════════════
-#  app.py
-#  Interface gráfica CRUD — Sistema de Gestão de Casino
-#  Estrutura: Janela principal (hub) + 4 janelas separadas
-#             Casinos | Clientes | Jogos | Transações
+#  app.py  —  Sistema de Gestão de Casino
 # ══════════════════════════════════════════════════════════════
 
 import tkinter as tk
@@ -29,10 +26,7 @@ from transacao import (
     CAMPOS_EDITAVEIS_TRANSACAO, carregar_transacoes,
 )
 
-
-# ══════════════════════════════════════════════════════════════
-#  PALETA
-# ══════════════════════════════════════════════════════════════
+# ── Paleta ────────────────────────────────────────────────────
 COR_BG        = "#0F0F1A"
 COR_PANEL     = "#16213E"
 COR_CARD      = "#1A1A2E"
@@ -48,12 +42,11 @@ COR_BTN_DEL   = "#EF4444"
 COR_BTN_INFO  = "#3B82F6"
 COR_BTN_CLEAR = "#6B7280"
 
-# Cor de destaque por módulo
 CORES_MODULO = {
-    "casino":    "#E94560",   # vermelho coral
-    "cliente":   "#3B82F6",   # azul
-    "jogo":      "#10B981",   # verde esmeralda
-    "transacao": "#F59E0B",   # âmbar
+    "casino":    "#E94560",
+    "cliente":   "#3B82F6",
+    "jogo":      "#10B981",
+    "transacao": "#F59E0B",
 }
 
 
@@ -68,8 +61,6 @@ def _escurecer(hex_cor, fator=0.75):
         max(0, int(r * fator)), max(0, int(g * fator)), max(0, int(b * fator))
     )
 
-
-
 def _estilo_entry(e, width=26):
     e.configure(
         width=width,
@@ -82,7 +73,7 @@ def _estilo_entry(e, width=26):
         font=("Consolas", 10),
     )
 
-def _btn(parent, text, command, cor, width=14, side="left"):
+def _btn(parent, text, command, cor, width=14):
     b = tk.Button(
         parent, text=text, command=command,
         bg=cor, fg="white",
@@ -115,34 +106,40 @@ def _treeview_estilo(accent=COR_ACCENT):
     )
 
 def _janela_modulo(titulo, icone, cor_mod, largura=1050, altura=680):
-    """Cria e devolve uma Toplevel estilizada para cada módulo."""
     win = tk.Toplevel()
     win.title(f"{icone}  {titulo}")
     win.geometry(f"{largura}x{altura}")
     win.minsize(820, 500)
     win.configure(bg=COR_CARD)
 
-    # Barra de topo colorida com cor do módulo
     fr_topo = tk.Frame(win, bg=cor_mod, height=46)
     fr_topo.pack(fill="x")
     fr_topo.pack_propagate(False)
-    tk.Label(
-        fr_topo,
-        text=f"{icone}  {titulo.upper()}",
-        bg=cor_mod, fg="white",
-        font=("Segoe UI", 12, "bold"),
-    ).pack(side="left", padx=18, pady=8)
+    tk.Label(fr_topo, text=f"{icone}  {titulo.upper()}",
+             bg=cor_mod, fg="white",
+             font=("Segoe UI", 12, "bold")).pack(side="left", padx=18, pady=8)
 
     _treeview_estilo(accent=cor_mod)
     return win
 
 def _frame_form(parent, cor_mod):
-    """Frame de formulário estilizado."""
-    fr = tk.Frame(parent, bg=COR_PANEL, padx=14, pady=10)
-    fr.pack(fill="x", padx=10, pady=(8, 4))
-    # Linha colorida no topo do formulário
-    tk.Frame(fr, bg=cor_mod, height=3).pack(fill="x", pady=(0, 8))
-    return fr
+    """
+    Devolve (fr_outer, fr_grid):
+      - fr_outer  : frame com pack — contém a stripe colorida e fr_grid
+      - fr_grid   : sub-frame filho com APENAS grid — usa-se para os widgets
+    Assim nunca se mistura pack e grid no mesmo container.
+    """
+    fr_outer = tk.Frame(parent, bg=COR_PANEL, padx=14, pady=10)
+    fr_outer.pack(fill="x", padx=10, pady=(8, 4))
+
+    # Linha colorida gerida por pack dentro de fr_outer — OK
+    tk.Frame(fr_outer, bg=cor_mod, height=3).pack(fill="x", pady=(0, 6))
+
+    # Sub-frame filho — todos os widgets usarão .grid() aqui
+    fr_grid = tk.Frame(fr_outer, bg=COR_PANEL)
+    fr_grid.pack(fill="x")          # pack só este frame dentro de fr_outer
+
+    return fr_outer, fr_grid
 
 def _frame_tabela(parent):
     fr = tk.Frame(parent, bg=COR_CARD)
@@ -157,32 +154,6 @@ def _frame_botoes(parent):
 def _label_field(parent, text):
     return tk.Label(parent, text=text, bg=COR_PANEL,
                     fg=COR_TEXT_DIM, font=("Segoe UI", 9))
-
-def _label_section(parent, text, cor):
-    tk.Label(parent, text=text, bg=COR_PANEL,
-             fg=cor, font=("Segoe UI", 10, "bold")).pack(anchor="w", pady=(0, 6))
-
-def _row_edicao(parent, id_var, row=99):
-    """Linha de edição pontual reutilizável (ID sel + campo + valor)."""
-    fr = tk.Frame(parent, bg=COR_PANEL)
-    fr.pack(fill="x", pady=(4, 0))
-
-    tk.Label(fr, text="ID selecionado", bg=COR_PANEL, fg=COR_TEXT_DIM,
-             font=("Segoe UI", 9)).grid(row=0, column=0, sticky="w", padx=(0, 4))
-    e_id = tk.Entry(fr, textvariable=id_var, state="readonly", width=16)
-    _estilo_entry(e_id, 16); e_id.grid(row=0, column=1, padx=(0, 18))
-
-    tk.Label(fr, text="Campo a editar", bg=COR_PANEL, fg=COR_TEXT_DIM,
-             font=("Segoe UI", 9)).grid(row=0, column=2, sticky="w", padx=(0, 4))
-    e_campo = tk.Entry(fr, width=18)
-    _estilo_entry(e_campo, 18); e_campo.grid(row=0, column=3, padx=(0, 10))
-
-    tk.Label(fr, text="Novo valor", bg=COR_PANEL, fg=COR_TEXT_DIM,
-             font=("Segoe UI", 9)).grid(row=0, column=4, sticky="w", padx=(0, 4))
-    e_valor = tk.Entry(fr, width=22)
-    _estilo_entry(e_valor, 22); e_valor.grid(row=0, column=5, padx=(0, 0))
-
-    return e_id, e_campo, e_valor
 
 def _treeview_com_scroll(parent, colunas, larguras, altura=12):
     tabela = ttk.Treeview(parent, columns=colunas, show="headings",
@@ -210,8 +181,7 @@ def abrir_casinos():
     win = _janela_modulo("Gestão de Casinos", "🏛", cor, 1000, 660)
     id_sel = tk.StringVar()
 
-    # ── Formulário ────────────────────────────────────────────
-    fr_form = _frame_form(win, cor)
+    _, fr = _frame_form(win, cor)   # fr é o sub-frame de grid
 
     grid_campos = [
         ("Nome",           "nome",  0, 0),
@@ -222,37 +192,35 @@ def abrir_casinos():
     ]
     entries = {}
     for lbl, key, row, col in grid_campos:
-        _label_field(fr_form, lbl).grid(row=row, column=col,   sticky="w", pady=4, padx=(0,4))
-        e = tk.Entry(fr_form)
-        _estilo_entry(e)
-        e.grid(row=row, column=col+1, pady=4, padx=(0, 18))
+        _label_field(fr, lbl).grid(row=row, column=col, sticky="w", pady=4, padx=(0,4))
+        e = tk.Entry(fr); _estilo_entry(e)
+        e.grid(row=row, column=col+1, pady=4, padx=(0,18))
         entries[key] = e
 
-    # Linha de edição pontual
-    tk.Frame(fr_form, bg=COR_SEP, height=1).grid(
-        row=2, column=0, columnspan=6, sticky="ew", pady=(8, 4))
-    _label_field(fr_form, "ID selecionado").grid(row=3, column=0, sticky="w", pady=4, padx=(0,4))
-    e_id = tk.Entry(fr_form, textvariable=id_sel, state="readonly")
+    tk.Frame(fr, bg=COR_SEP, height=1).grid(
+        row=2, column=0, columnspan=6, sticky="ew", pady=(6, 4))
+
+    _label_field(fr, "ID selecionado").grid(row=3, column=0, sticky="w", pady=4, padx=(0,4))
+    e_id = tk.Entry(fr, textvariable=id_sel, state="readonly")
     _estilo_entry(e_id, 16); e_id.grid(row=3, column=1, pady=4, padx=(0,18))
-    _label_field(fr_form, "Campo a editar").grid(row=3, column=2, sticky="w", pady=4, padx=(0,4))
-    e_campo = tk.Entry(fr_form); _estilo_entry(e_campo, 18)
+
+    _label_field(fr, "Campo a editar").grid(row=3, column=2, sticky="w", pady=4, padx=(0,4))
+    e_campo = tk.Entry(fr); _estilo_entry(e_campo, 18)
     e_campo.grid(row=3, column=3, pady=4, padx=(0,10))
-    _label_field(fr_form, "Novo valor").grid(row=3, column=4, sticky="w", pady=4, padx=(0,4))
-    e_valor = tk.Entry(fr_form); _estilo_entry(e_valor, 22)
+
+    _label_field(fr, "Novo valor").grid(row=3, column=4, sticky="w", pady=4, padx=(0,4))
+    e_valor = tk.Entry(fr); _estilo_entry(e_valor, 22)
     e_valor.grid(row=3, column=5, pady=4)
 
-    # Dica de campos editáveis
-    tk.Label(fr_form, text=f"Campos editáveis: {' | '.join(CAMPOS_EDITAVEIS_CASINO)}",
+    tk.Label(fr, text=f"Campos editáveis: {' | '.join(CAMPOS_EDITAVEIS_CASINO)}",
              bg=COR_PANEL, fg=COR_TEXT_DIM, font=("Segoe UI", 8, "italic")
-             ).grid(row=4, column=0, columnspan=6, sticky="w", pady=(2, 0))
+             ).grid(row=4, column=0, columnspan=6, sticky="w", pady=(2,0))
 
-    # ── Tabela ────────────────────────────────────────────────
     fr_tab = _frame_tabela(win)
     colunas  = ("ID", "Nome", "Localização", "Taxa", "Moeda", "Capacidade", "Clientes", "Jogos")
     larguras = (60, 190, 160, 60, 70, 95, 70, 60)
     tabela = _treeview_com_scroll(fr_tab, colunas, larguras, 13)
 
-    # ── Funções internas ──────────────────────────────────────
     def limpar():
         id_sel.set("")
         e_campo.delete(0, "end"); e_valor.delete(0, "end")
@@ -295,10 +263,10 @@ def abrir_casinos():
             messagebox.showwarning("Aviso", "Clique numa linha da tabela primeiro.", parent=win); return
         campo, valor = e_campo.get().strip(), e_valor.get().strip()
         if not campo or not valor:
-            messagebox.showwarning("Aviso", f"Preencha 'Campo a editar' e 'Novo valor'.", parent=win); return
+            messagebox.showwarning("Aviso", "Preencha 'Campo a editar' e 'Novo valor'.", parent=win); return
         code, obj = atualizar_casino(id_sel.get(), campo, valor)
         if code == 200:
-            messagebox.showinfo("✓ Atualizado", "Casino atualizado com sucesso.", parent=win)
+            messagebox.showinfo("✓ Atualizado", "Casino atualizado.", parent=win)
             limpar(); carregar()
         else:
             messagebox.showerror("Erro", str(obj), parent=win)
@@ -306,22 +274,21 @@ def abrir_casinos():
     def remover():
         if not id_sel.get():
             messagebox.showwarning("Aviso", "Clique numa linha da tabela primeiro.", parent=win); return
-        if messagebox.askyesno("Confirmar remoção", f"Remover casino '{id_sel.get()}'? Esta ação não pode ser desfeita.", parent=win):
+        if messagebox.askyesno("Confirmar", f"Remover casino '{id_sel.get()}'?", parent=win):
             code, obj = remover_casino(id_sel.get())
             if code == 200:
-                messagebox.showinfo("✓ Removido", f"Casino '{id_sel.get()}' removido.", parent=win)
+                messagebox.showinfo("✓ Removido", f"Casino removido.", parent=win)
                 limpar(); carregar()
             else:
                 messagebox.showerror("Erro", str(obj), parent=win)
 
     tabela.bind("<<TreeviewSelect>>", ao_selecionar)
 
-    # ── Botões ────────────────────────────────────────────────
     fr_btn = _frame_botoes(win)
-    _btn(fr_btn, "➕  Criar",       criar,    COR_BTN_OK).pack(side="left", padx=4)
-    _btn(fr_btn, "✏  Atualizar",   atualizar, COR_BTN_WARN).pack(side="left", padx=4)
-    _btn(fr_btn, "🗑  Remover",    remover,  COR_BTN_DEL).pack(side="left", padx=4)
-    _btn(fr_btn, "↺  Limpar",     limpar,   COR_BTN_CLEAR).pack(side="left", padx=4)
+    _btn(fr_btn, "➕  Criar",            criar,    COR_BTN_OK).pack(side="left", padx=4)
+    _btn(fr_btn, "✏  Atualizar",        atualizar, COR_BTN_WARN).pack(side="left", padx=4)
+    _btn(fr_btn, "🗑  Remover",         remover,  COR_BTN_DEL).pack(side="left", padx=4)
+    _btn(fr_btn, "↺  Limpar",          limpar,   COR_BTN_CLEAR).pack(side="left", padx=4)
     _btn(fr_btn, "⟳  Atualizar tabela", carregar, COR_BTN_INFO, 18).pack(side="right", padx=4)
 
     carregar()
@@ -336,13 +303,12 @@ def abrir_clientes():
     win = _janela_modulo("Gestão de Clientes", "👤", cor, 1080, 720)
     id_sel = tk.StringVar()
 
-    fr_form = _frame_form(win, cor)
+    _, fr = _frame_form(win, cor)
 
-    # Dropdown Casino
-    _label_field(fr_form, "Casino").grid(row=0, column=0, sticky="w", pady=4, padx=(0,4))
+    _label_field(fr, "Casino").grid(row=0, column=0, sticky="w", pady=4, padx=(0,4))
     casino_var = tk.StringVar()
-    cb_casino = ttk.Combobox(fr_form, textvariable=casino_var, width=18, state="readonly")
-    cb_casino.grid(row=0, column=1, pady=4, padx=(0, 18))
+    cb_casino = ttk.Combobox(fr, textvariable=casino_var, width=18, state="readonly")
+    cb_casino.grid(row=0, column=1, pady=4, padx=(0,18))
 
     def _refresh_casinos():
         ids = _obter_casino_ids()
@@ -361,28 +327,29 @@ def abrir_clientes():
     ]
     entries = {}
     for lbl, key, row, col in grid_campos:
-        _label_field(fr_form, lbl).grid(row=row, column=col, sticky="w", pady=4, padx=(0,4))
-        e = tk.Entry(fr_form); _estilo_entry(e)
+        _label_field(fr, lbl).grid(row=row, column=col, sticky="w", pady=4, padx=(0,4))
+        e = tk.Entry(fr); _estilo_entry(e)
         e.grid(row=row, column=col+1, pady=4, padx=(0,18))
         entries[key] = e
 
-    # Separador + edição pontual
-    tk.Frame(fr_form, bg=COR_SEP, height=1).grid(row=3, column=0, columnspan=6, sticky="ew", pady=(6,4))
-    _label_field(fr_form, "ID selecionado").grid(row=4, column=0, sticky="w", pady=4, padx=(0,4))
-    e_id = tk.Entry(fr_form, textvariable=id_sel, state="readonly")
+    tk.Frame(fr, bg=COR_SEP, height=1).grid(row=3, column=0, columnspan=6, sticky="ew", pady=(6,4))
+
+    _label_field(fr, "ID selecionado").grid(row=4, column=0, sticky="w", pady=4, padx=(0,4))
+    e_id = tk.Entry(fr, textvariable=id_sel, state="readonly")
     _estilo_entry(e_id, 16); e_id.grid(row=4, column=1, pady=4, padx=(0,18))
-    _label_field(fr_form, "Campo a editar").grid(row=4, column=2, sticky="w", pady=4, padx=(0,4))
-    e_campo = tk.Entry(fr_form); _estilo_entry(e_campo, 18)
+
+    _label_field(fr, "Campo a editar").grid(row=4, column=2, sticky="w", pady=4, padx=(0,4))
+    e_campo = tk.Entry(fr); _estilo_entry(e_campo, 18)
     e_campo.grid(row=4, column=3, pady=4, padx=(0,10))
-    _label_field(fr_form, "Novo valor").grid(row=4, column=4, sticky="w", pady=4, padx=(0,4))
-    e_valor = tk.Entry(fr_form); _estilo_entry(e_valor, 22)
+
+    _label_field(fr, "Novo valor").grid(row=4, column=4, sticky="w", pady=4, padx=(0,4))
+    e_valor = tk.Entry(fr); _estilo_entry(e_valor, 22)
     e_valor.grid(row=4, column=5, pady=4)
 
-    tk.Label(fr_form, text=f"Campos editáveis: {' | '.join(CAMPOS_EDITAVEIS_CLIENTE)}",
+    tk.Label(fr, text=f"Campos editáveis: {' | '.join(CAMPOS_EDITAVEIS_CLIENTE)}",
              bg=COR_PANEL, fg=COR_TEXT_DIM, font=("Segoe UI", 8, "italic")
-             ).grid(row=5, column=0, columnspan=6, sticky="w", pady=(2, 0))
+             ).grid(row=5, column=0, columnspan=6, sticky="w", pady=(2,0))
 
-    # Tabela
     fr_tab = _frame_tabela(win)
     colunas  = ("ID", "Casino", "Nome", "Género", "Nacionalidade", "Contacto", "Saldo €", "Nível", "Estado")
     larguras = (80, 55, 170, 60, 120, 140, 75, 70, 70)
@@ -458,10 +425,10 @@ def abrir_clientes():
     tabela.bind("<<TreeviewSelect>>", ao_selecionar)
 
     fr_btn = _frame_botoes(win)
-    _btn(fr_btn, "➕  Criar",       criar,    COR_BTN_OK).pack(side="left", padx=4)
-    _btn(fr_btn, "✏  Atualizar",   atualizar, COR_BTN_WARN).pack(side="left", padx=4)
-    _btn(fr_btn, "🗑  Remover",    remover,  COR_BTN_DEL).pack(side="left", padx=4)
-    _btn(fr_btn, "↺  Limpar",     limpar,   COR_BTN_CLEAR).pack(side="left", padx=4)
+    _btn(fr_btn, "➕  Criar",            criar,    COR_BTN_OK).pack(side="left", padx=4)
+    _btn(fr_btn, "✏  Atualizar",        atualizar, COR_BTN_WARN).pack(side="left", padx=4)
+    _btn(fr_btn, "🗑  Remover",         remover,  COR_BTN_DEL).pack(side="left", padx=4)
+    _btn(fr_btn, "↺  Limpar",          limpar,   COR_BTN_CLEAR).pack(side="left", padx=4)
     _btn(fr_btn, "⟳  Atualizar tabela", carregar, COR_BTN_INFO, 18).pack(side="right", padx=4)
 
     _refresh_casinos()
@@ -477,13 +444,12 @@ def abrir_jogos():
     win = _janela_modulo("Gestão de Jogos", "🎲", cor, 1060, 720)
     id_sel = tk.StringVar()
 
-    fr_form = _frame_form(win, cor)
+    _, fr = _frame_form(win, cor)
 
-    # Dropdown Casino
-    _label_field(fr_form, "Casino").grid(row=0, column=0, sticky="w", pady=4, padx=(0,4))
+    _label_field(fr, "Casino").grid(row=0, column=0, sticky="w", pady=4, padx=(0,4))
     casino_var = tk.StringVar()
-    cb_casino = ttk.Combobox(fr_form, textvariable=casino_var, width=18, state="readonly")
-    cb_casino.grid(row=0, column=1, pady=4, padx=(0, 18))
+    cb_casino = ttk.Combobox(fr, textvariable=casino_var, width=18, state="readonly")
+    cb_casino.grid(row=0, column=1, pady=4, padx=(0,18))
 
     def _refresh_casinos():
         ids = _obter_casino_ids()
@@ -500,13 +466,14 @@ def abrir_jogos():
     ]
     entries = {}
     for lbl, key, row, col in grid_campos:
-        _label_field(fr_form, lbl).grid(row=row, column=col, sticky="w", pady=4, padx=(0,4))
-        e = tk.Entry(fr_form); _estilo_entry(e)
+        _label_field(fr, lbl).grid(row=row, column=col, sticky="w", pady=4, padx=(0,4))
+        e = tk.Entry(fr); _estilo_entry(e)
         e.grid(row=row, column=col+1, pady=4, padx=(0,18))
         entries[key] = e
 
-    # Checkbuttons de tipos
-    fr_tipos = tk.Frame(fr_form, bg=COR_PANEL)
+    # Checkbuttons tipos — sub-frame com pack dentro de fr_tab_tipos
+    # mas o fr_tab_tipos em si é colocado com grid dentro de fr
+    fr_tipos = tk.Frame(fr, bg=COR_PANEL)
     fr_tipos.grid(row=2, column=2, columnspan=4, sticky="w", pady=4)
     tk.Label(fr_tipos, text="Tipos:", bg=COR_PANEL, fg=COR_TEXT_DIM,
              font=("Segoe UI", 9, "bold")).pack(side="left", padx=(0,8))
@@ -523,23 +490,24 @@ def abrir_jogos():
         ck.pack(side="left", padx=5)
         tipos_vars[tipo] = var
 
-    # Separador + edição pontual
-    tk.Frame(fr_form, bg=COR_SEP, height=1).grid(row=3, column=0, columnspan=6, sticky="ew", pady=(6,4))
-    _label_field(fr_form, "ID selecionado").grid(row=4, column=0, sticky="w", pady=4, padx=(0,4))
-    e_id = tk.Entry(fr_form, textvariable=id_sel, state="readonly")
+    tk.Frame(fr, bg=COR_SEP, height=1).grid(row=3, column=0, columnspan=6, sticky="ew", pady=(6,4))
+
+    _label_field(fr, "ID selecionado").grid(row=4, column=0, sticky="w", pady=4, padx=(0,4))
+    e_id = tk.Entry(fr, textvariable=id_sel, state="readonly")
     _estilo_entry(e_id, 16); e_id.grid(row=4, column=1, pady=4, padx=(0,18))
-    _label_field(fr_form, "Campo a editar").grid(row=4, column=2, sticky="w", pady=4, padx=(0,4))
-    e_campo = tk.Entry(fr_form); _estilo_entry(e_campo, 18)
+
+    _label_field(fr, "Campo a editar").grid(row=4, column=2, sticky="w", pady=4, padx=(0,4))
+    e_campo = tk.Entry(fr); _estilo_entry(e_campo, 18)
     e_campo.grid(row=4, column=3, pady=4, padx=(0,10))
-    _label_field(fr_form, "Novo valor").grid(row=4, column=4, sticky="w", pady=4, padx=(0,4))
-    e_valor = tk.Entry(fr_form); _estilo_entry(e_valor, 22)
+
+    _label_field(fr, "Novo valor").grid(row=4, column=4, sticky="w", pady=4, padx=(0,4))
+    e_valor = tk.Entry(fr); _estilo_entry(e_valor, 22)
     e_valor.grid(row=4, column=5, pady=4)
 
-    tk.Label(fr_form, text=f"Campos editáveis: {' | '.join(CAMPOS_EDITAVEIS_JOGO)}",
+    tk.Label(fr, text=f"Campos editáveis: {' | '.join(CAMPOS_EDITAVEIS_JOGO)}",
              bg=COR_PANEL, fg=COR_TEXT_DIM, font=("Segoe UI", 8, "italic")
              ).grid(row=5, column=0, columnspan=6, sticky="w", pady=(2,0))
 
-    # Tabela
     fr_tab = _frame_tabela(win)
     colunas  = ("ID", "Casino", "Nome", "Custo €", "Saldo €", "Retorno", "Nível", "Estado")
     larguras = (80, 60, 200, 75, 85, 75, 70, 70)
@@ -619,10 +587,10 @@ def abrir_jogos():
     tabela.bind("<<TreeviewSelect>>", ao_selecionar)
 
     fr_btn = _frame_botoes(win)
-    _btn(fr_btn, "➕  Criar",       criar,    COR_BTN_OK).pack(side="left", padx=4)
-    _btn(fr_btn, "✏  Atualizar",   atualizar, COR_BTN_WARN).pack(side="left", padx=4)
-    _btn(fr_btn, "🗑  Remover",    remover,  COR_BTN_DEL).pack(side="left", padx=4)
-    _btn(fr_btn, "↺  Limpar",     limpar,   COR_BTN_CLEAR).pack(side="left", padx=4)
+    _btn(fr_btn, "➕  Criar",            criar,    COR_BTN_OK).pack(side="left", padx=4)
+    _btn(fr_btn, "✏  Atualizar",        atualizar, COR_BTN_WARN).pack(side="left", padx=4)
+    _btn(fr_btn, "🗑  Remover",         remover,  COR_BTN_DEL).pack(side="left", padx=4)
+    _btn(fr_btn, "↺  Limpar",          limpar,   COR_BTN_CLEAR).pack(side="left", padx=4)
     _btn(fr_btn, "⟳  Atualizar tabela", carregar, COR_BTN_INFO, 18).pack(side="right", padx=4)
 
     _refresh_casinos()
@@ -639,7 +607,7 @@ def abrir_transacoes():
     id_sel = tk.StringVar()
     carregar_transacoes()
 
-    fr_form = _frame_form(win, cor)
+    _, fr = _frame_form(win, cor)
 
     grid_campos = [
         ("ID Cliente",              "id_cli",   0, 0),
@@ -651,33 +619,32 @@ def abrir_transacoes():
     ]
     entries = {}
     for lbl, key, row, col in grid_campos:
-        _label_field(fr_form, lbl).grid(row=row, column=col, sticky="w", pady=4, padx=(0,4))
-        e = tk.Entry(fr_form); _estilo_entry(e)
+        _label_field(fr, lbl).grid(row=row, column=col, sticky="w", pady=4, padx=(0,4))
+        e = tk.Entry(fr); _estilo_entry(e)
         e.grid(row=row, column=col+1, pady=4, padx=(0,18))
         entries[key] = e
 
-    # Separador + filtro + edição
-    tk.Frame(fr_form, bg=COR_SEP, height=1).grid(row=2, column=0, columnspan=6, sticky="ew", pady=(6,4))
+    tk.Frame(fr, bg=COR_SEP, height=1).grid(row=2, column=0, columnspan=6, sticky="ew", pady=(6,4))
 
-    _label_field(fr_form, "Filtrar por ID Cliente").grid(row=3, column=0, sticky="w", pady=4, padx=(0,4))
-    e_filtro = tk.Entry(fr_form); _estilo_entry(e_filtro, 18)
+    _label_field(fr, "Filtrar por ID Cliente").grid(row=3, column=0, sticky="w", pady=4, padx=(0,4))
+    e_filtro = tk.Entry(fr); _estilo_entry(e_filtro, 18)
     e_filtro.grid(row=3, column=1, pady=4, padx=(0,18))
 
-    _label_field(fr_form, "ID selecionado").grid(row=3, column=2, sticky="w", pady=4, padx=(0,4))
-    e_id = tk.Entry(fr_form, textvariable=id_sel, state="readonly")
+    _label_field(fr, "ID selecionado").grid(row=3, column=2, sticky="w", pady=4, padx=(0,4))
+    e_id = tk.Entry(fr, textvariable=id_sel, state="readonly")
     _estilo_entry(e_id, 16); e_id.grid(row=3, column=3, pady=4, padx=(0,10))
 
-    _label_field(fr_form, "Campo  /  Novo valor").grid(row=3, column=4, sticky="w", pady=4, padx=(0,4))
-    fr_ed = tk.Frame(fr_form, bg=COR_PANEL)
+    _label_field(fr, "Campo  /  Novo valor").grid(row=3, column=4, sticky="w", pady=4, padx=(0,4))
+    # sub-frame para os dois entries lado a lado — pack dentro dele, grid no fr pai
+    fr_ed = tk.Frame(fr, bg=COR_PANEL)
     fr_ed.grid(row=3, column=5, pady=4)
     e_campo = tk.Entry(fr_ed, width=12); _estilo_entry(e_campo, 12); e_campo.pack(side="left", padx=(0,4))
     e_valor = tk.Entry(fr_ed, width=14); _estilo_entry(e_valor, 14); e_valor.pack(side="left")
 
-    tk.Label(fr_form, text=f"Campos editáveis: {' | '.join(CAMPOS_EDITAVEIS_TRANSACAO)}",
+    tk.Label(fr, text=f"Campos editáveis: {' | '.join(CAMPOS_EDITAVEIS_TRANSACAO)}",
              bg=COR_PANEL, fg=COR_TEXT_DIM, font=("Segoe UI", 8, "italic")
              ).grid(row=4, column=0, columnspan=6, sticky="w", pady=(2,0))
 
-    # Tabela
     fr_tab = _frame_tabela(win)
     colunas  = ("ID Transação", "ID Cliente", "Tipo", "Movimento", "Montante €", "Método", "Data/Hora", "Estado")
     larguras = (100, 85, 75, 80, 85, 115, 148, 90)
@@ -758,12 +725,12 @@ def abrir_transacoes():
     tabela.bind("<<TreeviewSelect>>", ao_selecionar)
 
     fr_btn = _frame_botoes(win)
-    _btn(fr_btn, "➕  Criar",       criar,    COR_BTN_OK).pack(side="left", padx=4)
-    _btn(fr_btn, "🔍  Filtrar",    filtrar,  COR_BTN_INFO).pack(side="left", padx=4)
-    _btn(fr_btn, "✏  Atualizar",  atualizar, COR_BTN_WARN).pack(side="left", padx=4)
-    _btn(fr_btn, "🗑  Remover",   remover,  COR_BTN_DEL).pack(side="left", padx=4)
-    _btn(fr_btn, "↺  Limpar",    limpar,   COR_BTN_CLEAR).pack(side="left", padx=4)
-    _btn(fr_btn, "⟳  Todos",     carregar, COR_BTN_INFO, 10).pack(side="right", padx=4)
+    _btn(fr_btn, "➕  Criar",      criar,    COR_BTN_OK).pack(side="left", padx=4)
+    _btn(fr_btn, "🔍  Filtrar",   filtrar,  COR_BTN_INFO).pack(side="left", padx=4)
+    _btn(fr_btn, "✏  Atualizar", atualizar, COR_BTN_WARN).pack(side="left", padx=4)
+    _btn(fr_btn, "🗑  Remover",  remover,  COR_BTN_DEL).pack(side="left", padx=4)
+    _btn(fr_btn, "↺  Limpar",   limpar,   COR_BTN_CLEAR).pack(side="left", padx=4)
+    _btn(fr_btn, "⟳  Todos",    carregar, COR_BTN_INFO, 10).pack(side="right", padx=4)
 
     carregar()
 
@@ -775,74 +742,59 @@ def abrir_transacoes():
 def main():
     raiz = tk.Tk()
     raiz.title("Casino Management System")
-    raiz.geometry("520x420")
+    raiz.geometry("480x400")
     raiz.resizable(False, False)
     raiz.configure(bg=COR_BG)
 
-    # ── Banner ────────────────────────────────────────────────
     fr_banner = tk.Frame(raiz, bg=COR_ACCENT, height=90)
     fr_banner.pack(fill="x")
     fr_banner.pack_propagate(False)
-    tk.Label(fr_banner, text="🎰", bg=COR_ACCENT, font=("Segoe UI", 32)).pack(side="left", padx=22)
-    fr_banner_txt = tk.Frame(fr_banner, bg=COR_ACCENT)
-    fr_banner_txt.pack(side="left", pady=18)
-    tk.Label(fr_banner_txt, text="CASINO MANAGEMENT SYSTEM",
-             bg=COR_ACCENT, fg="white", font=("Segoe UI", 13, "bold")).pack(anchor="w")
-    tk.Label(fr_banner_txt, text="Seleciona um módulo para abrir a janela de gestão",
-             bg=COR_ACCENT, fg="#FFD0D8", font=("Segoe UI", 9)).pack(anchor="w")
+    tk.Label(fr_banner, text="🎰", bg=COR_ACCENT,
+             font=("Segoe UI", 32)).pack(side="left", padx=22)
+    fr_txt = tk.Frame(fr_banner, bg=COR_ACCENT)
+    fr_txt.pack(side="left", pady=18)
+    tk.Label(fr_txt, text="CASINO MANAGEMENT SYSTEM",
+             bg=COR_ACCENT, fg="white",
+             font=("Segoe UI", 13, "bold")).pack(anchor="w")
+    tk.Label(fr_txt, text="Seleciona um módulo para abrir a janela de gestão",
+             bg=COR_ACCENT, fg="#FFD0D8",
+             font=("Segoe UI", 9)).pack(anchor="w")
 
-    # ── Cards de módulos ──────────────────────────────────────
-    fr_cards = tk.Frame(raiz, bg=COR_BG)
-    fr_cards.pack(expand=True, fill="both", padx=30, pady=20)
+    fr_nav = tk.Frame(raiz, bg=COR_BG)
+    fr_nav.pack(expand=True, fill="both", padx=40, pady=20)
 
     modulos = [
-        ("🏛", "Casinos",    "Gerir casinos, localização,\ntaxa e capacidade",              CORES_MODULO["casino"],    abrir_casinos),
-        ("👤", "Clientes",   "Gerir clientes, saldo, nível\ne estado de conta",             CORES_MODULO["cliente"],   abrir_clientes),
-        ("🎲", "Jogos",      "Gerir jogos, custo mínimo,\nbanca e tipos de jogo",           CORES_MODULO["jogo"],      abrir_jogos),
-        ("💳", "Transações", "Registar e consultar\nmovimentos financeiros",                CORES_MODULO["transacao"], abrir_transacoes),
+        ("🏛   Casinos",    CORES_MODULO["casino"],    abrir_casinos),
+        ("👤   Clientes",   CORES_MODULO["cliente"],   abrir_clientes),
+        ("🎲   Jogos",      CORES_MODULO["jogo"],      abrir_jogos),
+        ("💳   Transações", CORES_MODULO["transacao"], abrir_transacoes),
     ]
 
-    for i, (icone, titulo, desc, cor, comando) in enumerate(modulos):
-        row, col = divmod(i, 2)
-
-        fr_card = tk.Frame(fr_cards, bg=COR_CARD, relief="flat", bd=0,
-                           cursor="hand2", padx=0, pady=0)
-        fr_card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
-        fr_cards.columnconfigure(col, weight=1)
-        fr_cards.rowconfigure(row, weight=1)
-
-        # Stripe colorida no topo do card
-        tk.Frame(fr_card, bg=cor, height=4).pack(fill="x")
-
-        fr_inner = tk.Frame(fr_card, bg=COR_CARD, padx=16, pady=12)
-        fr_inner.pack(fill="both", expand=True)
-
-        tk.Label(fr_inner, text=icone, bg=COR_CARD,
-                 font=("Segoe UI", 26)).pack(anchor="w")
-        tk.Label(fr_inner, text=titulo, bg=COR_CARD, fg=cor,
-                 font=("Segoe UI", 12, "bold")).pack(anchor="w", pady=(4,0))
-        tk.Label(fr_inner, text=desc, bg=COR_CARD, fg=COR_TEXT_DIM,
-                 font=("Segoe UI", 9), justify="left").pack(anchor="w", pady=(3,8))
-
-        btn = tk.Button(
-            fr_inner, text=f"Abrir {titulo} →",
+    for texto, cor, comando in modulos:
+        b = tk.Button(
+            fr_nav,
+            text=texto,
             command=comando,
-            bg=cor, fg="white",
-            activebackground=_escurecer(cor, 0.8),
+            bg=cor,
+            fg="white",
+            activebackground=_escurecer(cor, 0.75),
             activeforeground="white",
-            relief="flat", bd=0, padx=10, pady=5,
-            font=("Segoe UI", 9, "bold"), cursor="hand2",
+            relief="flat",
+            bd=0,
+            font=("Segoe UI", 12, "bold"),
+            cursor="hand2",
+            anchor="w",
+            padx=20,
+            pady=12,
         )
-        btn.pack(anchor="w")
+        b.pack(fill="x", pady=5)
+        b.bind("<Enter>", lambda e, btn=b, c=cor: btn.config(bg=_escurecer(c, 0.80)))
+        b.bind("<Leave>", lambda e, btn=b, c=cor: btn.config(bg=c))
 
-        # Hover no card inteiro
-        for widget in [fr_card, fr_inner, btn]:
-            widget.bind("<Enter>", lambda e, f=fr_card, c=cor: f.config(bg=_escurecer(c, 0.15)))
-            widget.bind("<Leave>", lambda e, f=fr_card: f.config(bg=COR_CARD))
-
-    # ── Rodapé ────────────────────────────────────────────────
-    tk.Label(raiz, text="casino.py · cliente.py · jogo.py · transacao.py · utils.py",
-             bg=COR_BG, fg=COR_TEXT_DIM, font=("Segoe UI", 8)).pack(pady=(0, 10))
+    tk.Label(raiz,
+             text="casino.py · cliente.py · jogo.py · transacao.py · utils.py",
+             bg=COR_BG, fg=COR_TEXT_DIM,
+             font=("Segoe UI", 8)).pack(pady=(0, 10))
 
     raiz.mainloop()
 
