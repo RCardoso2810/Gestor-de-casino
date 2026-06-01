@@ -5,7 +5,7 @@
 # ══════════════════════════════════════════════════════════════
 
 import json
-import osl
+import os
 from logger import get_logger
 from utils import (
     validar_nome,
